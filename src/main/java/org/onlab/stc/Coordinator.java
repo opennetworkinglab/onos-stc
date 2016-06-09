@@ -57,6 +57,7 @@ public class Coordinator {
 
     private final Set<StepProcessListener> listeners = Sets.newConcurrentHashSet();
     private File logDir;
+    private boolean haltOnError = false;
 
     /**
      * Represents action to be taken on a test step.
@@ -85,6 +86,19 @@ public class Coordinator {
         this.store = new ScenarioStore(processFlow, logDir, scenario.name());
         this.delegate = new Delegate();
         this.latch = new CountDownLatch(1);
+    }
+
+    /**
+     * Enables or disables halt-on-error behaviour.
+     *
+     * @param haltOnError true if coordinator should halt when error occurs
+     */
+    public void setHaltOnError(boolean haltOnError) {
+        this.haltOnError = haltOnError;
+    }
+
+    private boolean shouldStop() {
+        return haltOnError && store.hasFailures();
     }
 
     /**
@@ -150,7 +164,7 @@ public class Coordinator {
      * @throws InterruptedException if interrupted while waiting for completion
      */
     public int waitFor() throws InterruptedException {
-        while (!store.isComplete()) {
+        while (!store.isComplete() && !shouldStop()) {
             latch.await(1, TimeUnit.SECONDS);
         }
         return store.hasFailures() ? 1 : 0;
@@ -371,9 +385,11 @@ public class Coordinator {
         public void onCompletion(Step step, Status status) {
             store.markComplete(step, status);
             listeners.forEach(listener -> listener.onCompletion(step, status));
-            executeSucessors(step);
-            if (store.isComplete()) {
-                latch.countDown();
+            if (!shouldStop()) {
+                executeSucessors(step);
+                if (store.isComplete()) {
+                    latch.countDown();
+                }
             }
         }
 

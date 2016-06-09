@@ -73,6 +73,7 @@ public final class Main {
 
     private static boolean useColor = Objects.equals("true", System.getenv("stcColor"));
     private static boolean dumpLogs = Objects.equals("true", System.getenv("stcDumpLogs"));
+    private static boolean haltOnError = Objects.equals("true", System.getenv("stcHaltOnError"));
 
     // usage: stc [<scenario-file>] [run]
     // usage: stc [<scenario-file>] run [from <from-patterns>] [to <to-patterns>]]
@@ -124,6 +125,7 @@ public final class Main {
             // Setup the process flow coordinator
             coordinator = new Coordinator(scenario, compiler.processFlow(),
                                           compiler.logDir());
+            coordinator.setHaltOnError(haltOnError);
             coordinator.addListener(delegate);
 
             // Prepare the GUI monitor
