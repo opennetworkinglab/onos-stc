@@ -42,10 +42,11 @@ import static org.onlab.stc.Coordinator.print;
 public final class Main {
 
     private static final String NONE = "\u001B[0m";
-    private static final String GRAY = "\u001B[30;1m";
-    private static final String RED = "\u001B[31;1m";
-    private static final String GREEN = "\u001B[32;1m";
-    private static final String BLUE = "\u001B[36m";
+    private static final String GRAY = "\u001B[1;30m";
+    private static final String RED = "\u001B[1;31m";
+    private static final String GREEN = "\u001B[1;32m";
+    private static final String LIGHT_GREEN = "\u001B[0;32m";
+    private static final String BLUE = "\u001B[0;36m";
 
     private static final String SUCCESS_SUMMARY =
             "%s %sPassed! %d steps succeeded%s";
@@ -71,7 +72,10 @@ public final class Main {
     private Monitor monitor;
     private Listener delegate = new Listener();
 
-    private static boolean useColor = Objects.equals("true", System.getenv("stcColor"));
+    private static final String stcColor = System.getenv("stcColor");
+    private static boolean darkColor = Objects.equals("dark", stcColor);
+    private static boolean lightColor = Objects.equals("light", stcColor);
+    private static boolean useColor = darkColor || lightColor || Objects.equals("true", stcColor);
     private static boolean dumpLogs = Objects.equals("true", System.getenv("stcDumpLogs"));
     private static boolean haltOnError = Objects.equals("true", System.getenv("stcHaltOnError"));
 
@@ -283,7 +287,7 @@ public final class Main {
         }
         return status == null ? NONE :
                 (status == IN_PROGRESS ? BLUE :
-                        (status == SUCCEEDED ? GREEN :
+                        (status == SUCCEEDED ? (darkColor ? GREEN : LIGHT_GREEN) :
                                 (status == FAILED ? RED : GRAY)));
     }
 
