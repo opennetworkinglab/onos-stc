@@ -48,6 +48,8 @@ public final class Main {
     private static final String LIGHT_GREEN = "\u001B[0;32m";
     private static final String BLUE = "\u001B[0;36m";
 
+    private static final String TITLE = "\033]0;%sScenario %s; %d steps; %d passed, %d failed, %d skipped\007";
+
     private static final String SUCCESS_SUMMARY =
             "%s %sPassed! %d steps succeeded%s";
     private static final String MIXED_SUMMARY =
@@ -72,6 +74,7 @@ public final class Main {
     private Monitor monitor;
     private Listener delegate = new Listener();
 
+    private static final String stcTitle = System.getenv("stcTitle");
     private static final String stcColor = System.getenv("stcColor");
     private static boolean darkColor = Objects.equals("dark", stcColor);
     private static boolean lightColor = Objects.equals("light", stcColor);
@@ -199,6 +202,7 @@ public final class Main {
     // Runs the coordinator and waits for it to finish.
     private void runCoordinator() {
         try {
+            printTitle();
             Runtime.getRuntime().addShutdownHook(new ShutdownHook());
             coordinator.start();
             int exitCode = coordinator.waitFor();
@@ -210,6 +214,19 @@ public final class Main {
         }
     }
 
+    // Sets the terminal title to indicate progress.
+    private synchronized void printTitle() {
+        if (useColor) {
+            Set<Step> steps = coordinator.getSteps();
+            long success = steps.stream().filter(s -> coordinator.getStatus(s) == SUCCEEDED).count();
+            long failed = steps.stream().filter(s -> coordinator.getStatus(s) == FAILED).count();
+            long skipped = steps.stream().filter(s -> coordinator.getStatus(s) == SKIPPED).count();
+            System.out.print(String.format(TITLE, stcTitle, compiler.scenario().name(),
+                                           steps.size(), success, failed, skipped));
+        }
+    }
+
+    // Prints the summary line at the end of execution.
     private synchronized void printSummary(int exitCode, boolean isAborted) {
         if (!isReported) {
             isReported = true;
@@ -240,6 +257,7 @@ public final class Main {
 
         @Override
         public void onCompletion(Step step, Status status) {
+            printTitle();
             logStatus(currentTimeMillis(), step.name(), status, null);
             if (dumpLogs && !(step instanceof Group) && status == FAILED) {
                 dumpLogs(step);
