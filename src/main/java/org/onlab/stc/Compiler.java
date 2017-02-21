@@ -210,6 +210,9 @@ public class Compiler {
             if (dst != null) {
                 dependencies.add(new Dependency(src, dst, isSoft));
             }
+            else {
+                print( "WARNING: Could not find dependency %s while compiling step %s", name, src.name() );
+            }
         });
     }
 

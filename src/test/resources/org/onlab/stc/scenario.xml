@@ -18,7 +18,7 @@
 
     <import file="${test.dir}/two-scenario.xml"/>
 
-    <dependency name="dude" requires="~yolo"/>
+    <dependency name="dude" requires="~foo.yolo"/>
 
     <step name="yo" exec="some-command ${HOME} and ${prop.foo} args" if="${prop.foo}"/>
     <step name="hi" exec="some-command ${prop.bar} or ${HOME} other args"/>
