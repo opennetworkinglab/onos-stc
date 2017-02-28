@@ -209,9 +209,8 @@ public class Compiler {
             Step dst = getStep(name);
             if (dst != null) {
                 dependencies.add(new Dependency(src, dst, isSoft));
-            }
-            else {
-                print( "WARNING: Could not find dependency %s while compiling step %s", name, src.name() );
+            } else if (!inactiveSteps.containsKey(name)) {
+                throw new IllegalStateException("Step " + src.name() + " requires unknown dependency " + name);
             }
         });
     }
