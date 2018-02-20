@@ -60,12 +60,12 @@ public final class Main {
     private boolean isReported = false;
 
     private enum Command {
-        LIST, RUN, RUN_RANGE, HELP
+        LIST, LIST_FAILED, RUN, RUN_RANGE
     }
 
     private final String scenarioFile;
 
-    private Command command = Command.HELP;
+    private Command command = Command.RUN;
     private String runFromPatterns = "";
     private String runToPatterns = "";
 
@@ -85,16 +85,22 @@ public final class Main {
     // usage: stc [<scenario-file>] [run]
     // usage: stc [<scenario-file>] run [from <from-patterns>] [to <to-patterns>]]
     // usage: stc [<scenario-file>] list
+    // usage: stc [<scenario-file>] listFailed
 
     // Public construction forbidden
     private Main(String[] args) {
         this.scenarioFile = args[0];
+        String cmd = args.length >= 2 ? args[1] : "";
 
-        if (args.length <= 1 || args.length == 2 && args[1].equals("run")) {
+        if (isHelpFlag(cmd) || isHelpFlag(this.scenarioFile)) {
+            printHelp();
+        } else if (args.length <= 1 || args.length == 2 && cmd.equals("run")) {
             command = Command.RUN;
-        } else if (args.length == 2 && args[1].equals("list")) {
+        } else if (args.length == 2 && cmd.equals("list")) {
             command = Command.LIST;
-        } else if (args.length >= 4 && args[1].equals("run")) {
+        } else if (args.length == 2 && cmd.equals("listFailed")) {
+            command = Command.LIST_FAILED;
+        } else if (args.length >= 4 && cmd.equals("run")) {
             int i = 2;
             if (args[i].equals("from")) {
                 command = Command.RUN_RANGE;
@@ -107,6 +113,10 @@ public final class Main {
                 runToPatterns = args[i + 1];
             }
         }
+    }
+
+    private boolean isHelpFlag(String cmd) {
+        return cmd.equals("-?") || cmd.equals("-h") || cmd.equals("--help");
     }
 
     /**
@@ -171,12 +181,33 @@ public final class Main {
             case LIST:
                 processList();
                 break;
+            case LIST_FAILED:
+                processListFailed();
+                break;
             case RUN_RANGE:
                 processRunRange();
                 break;
             default:
                 print("Unsupported command %s", command);
+                printHelp();
+                break;
         }
+    }
+
+    private void printHelp() {
+        print("usage: stc [scenario [run*|list|listFailed]");
+        print("\n" +
+              "Commands:\n" +
+              " - run              runs the specified scenario\n" +
+              " - list             lists result from the prior run\n" +
+              " - listFailed       lists results of failed steps from the prior run\n" +
+              "\n" +
+              "Environment Variables:\n" +
+              "  - stcHaltOnError  true|false*     stop when a step fails\n" +
+              "  - stcDumpLogs     true|false*     dump logs for failed steps to console\n" +
+              "  - stcColor        dark*|light     use colors for dark or light terminals\n" +
+              "  - stcTitle                        terminal title prefix\n");
+        System.exit(0);
     }
 
     // Processes the scenario 'run' command.
@@ -196,6 +227,14 @@ public final class Main {
         coordinator.getRecords()
                 .forEach(event -> logStatus(event.time(), event.name(), event.status(), event.command()));
         printSummary(0, false);
+        System.exit(0);
+    }
+
+    // Processes the scenario 'listFailed' command.
+    private void processListFailed() {
+        coordinator.getRecords().stream()
+                .filter(event -> event.status() == FAILED)
+                .forEach(event -> logStatus(event.time(), event.name(), event.status(), event.command()));
         System.exit(0);
     }
 
