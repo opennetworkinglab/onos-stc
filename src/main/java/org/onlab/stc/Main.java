@@ -60,7 +60,7 @@ public final class Main {
     private boolean isReported = false;
 
     private enum Command {
-        LIST, LIST_FAILED, RUN, RUN_RANGE
+        LIST, LIST_FAILED, RUN, RUN_RANGE, VALIDATE
     }
 
     private final String scenarioFile;
@@ -96,6 +96,8 @@ public final class Main {
             printHelp();
         } else if (args.length <= 1 || args.length == 2 && cmd.equals("run")) {
             command = Command.RUN;
+        } else if (args.length == 2 && cmd.equals("validate")) {
+            command = Command.VALIDATE;
         } else if (args.length == 2 && cmd.equals("list")) {
             command = Command.LIST;
         } else if (args.length == 2 && cmd.equals("listFailed")) {
@@ -134,6 +136,10 @@ public final class Main {
         try {
             // Load scenario
             Scenario scenario = Scenario.loadScenario(new FileInputStream(scenarioFile));
+
+            if (command == Command.VALIDATE) {
+                return;
+            }
 
             // Elaborate scenario
             compiler = new Compiler(scenario);
@@ -201,6 +207,7 @@ public final class Main {
               " - run              runs the specified scenario\n" +
               " - list             lists result from the prior run\n" +
               " - listFailed       lists results of failed steps from the prior run\n" +
+              " - validate         checks that the XML for the scenario is valid\n" +
               "\n" +
               "Environment Variables:\n" +
               "  - stcHaltOnError  true|false*     stop when a step fails\n" +
