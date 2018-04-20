@@ -34,7 +34,7 @@
     <description>System Test Coordinator</description>
 
     <properties>
-        <onos.version>1.5.1</onos.version>
+        <onos.version>1.12.0</onos.version>
     </properties>
 
     <dependencies>
@@ -68,6 +68,13 @@
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>3.2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava-testlib</artifactId>
+            <version>22.0</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

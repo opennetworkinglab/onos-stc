@@ -524,7 +524,8 @@ public class Compiler {
         // Use a brute-force method of searching paths from all vertices.
         processFlow().getVertexes().forEach(s -> {
             DepthFirstSearch<Step, Dependency>.SpanningTreeResult r =
-                    dfs.search(processFlow, s, null, null, ALL_PATHS);
+                    (DepthFirstSearch<Step, Dependency>.SpanningTreeResult)
+                            dfs.search(processFlow, s, null, null, ALL_PATHS);
             r.edges().forEach((e, et) -> checkArgument(et != BACK_EDGE,
                                                        "Process flow has a cycle involving dependency from %s to %s",
                                                        e.src().name, e.dst().name));
