@@ -18,7 +18,18 @@ package org.onlab.stc;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import java.io.File;
 import java.io.InputStream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -57,6 +68,33 @@ public final class Scenario {
         return new Scenario(name, description, definition);
     }
 
+    private static DocumentBuilder validationBuilder() throws ParserConfigurationException, SAXException {
+        Schema schema = SchemaFactory
+                .newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
+                .newSchema(new StreamSource(Scenario.class.getClassLoader().getResourceAsStream("stc.xsd")));
+        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+        docBuilderFactory.setSchema(schema);
+        DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+
+        docBuilder.setErrorHandler(new ErrorHandler() {
+            @Override
+            public void warning(SAXParseException exception) throws SAXException {
+                throw exception;
+            }
+
+            @Override
+            public void error(SAXParseException exception) throws SAXException {
+                throw exception;
+            }
+
+            @Override
+            public void fatalError(SAXParseException exception)  throws SAXException {
+                throw exception;
+            }
+        });
+        return docBuilder;
+    }
+
     /**
      * Loads a new scenario from the specified input stream.
      *
@@ -69,9 +107,10 @@ public final class Scenario {
         cfg.setDelimiterParsingDisabled(true);
         cfg.setRootElementName(SCENARIO);
         try {
+            cfg.setDocumentBuilder(validationBuilder());
             cfg.load(stream);
             return loadScenario(cfg);
-        } catch (ConfigurationException e) {
+        } catch (ConfigurationException | ParserConfigurationException | SAXException e) {
             throw new IllegalArgumentException("Unable to load scenario from the stream", e);
         }
     }

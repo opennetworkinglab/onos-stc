@@ -1,0 +1,116 @@
+<!--
+  ~ Copyright 2017-present Open Networking Laboratory
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:attributeGroup name="stepAttributes">
+        <xs:attribute type="xs:string" name="cwd"/>
+        <xs:attribute type="xs:string" name="delay"/>
+        <xs:attribute type="xs:string" name="env"/>
+        <xs:attribute type="xs:string" name="exec"/>
+        <xs:attribute type="xs:string" name="if"/>
+        <xs:attribute type="xs:string" name="include"/>
+        <xs:attribute type="xs:string" name="name"/>
+        <xs:attribute type="xs:string" name="requires"/>
+        <xs:attribute type="xs:string" name="unless"/>
+    </xs:attributeGroup>
+
+    <xs:group name="containerAttributes">
+        <xs:sequence>
+            <xs:element ref="dependency" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element ref="group" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element ref="import" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element ref="parallel" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element ref="sequential" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element ref="step" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:group>
+
+    <xs:attributeGroup name="sequenceAttributes">
+        <xs:attribute type="xs:string" name="ends"/>
+        <xs:attribute type="xs:string" name="requires"/>
+        <xs:attribute type="xs:string" name="starts"/>
+        <xs:attribute type="xs:string" name="var"/>
+    </xs:attributeGroup>
+
+    <xs:element name="step">
+        <xs:complexType>
+            <xs:attributeGroup ref="stepAttributes"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="group">
+        <xs:complexType mixed="true">
+            <xs:choice maxOccurs="unbounded" minOccurs="0">
+                <xs:group ref="containerAttributes"/>
+            </xs:choice>
+            <xs:attributeGroup ref="stepAttributes"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="dependency">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute type="xs:string" name="name"/>
+                    <xs:attribute type="xs:string" name="requires"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="import">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute type="xs:string" name="file"/>
+                    <xs:attribute type="xs:string" name="namespace"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="parallel">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="step" maxOccurs="unbounded" minOccurs="0"/>
+                <xs:element ref="dependency" maxOccurs="unbounded" minOccurs="0"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="sequenceAttributes"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="sequential">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="step" maxOccurs="unbounded" minOccurs="0"/>
+                <xs:element ref="dependency" maxOccurs="unbounded" minOccurs="0"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="sequenceAttributes"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="scenario">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded" minOccurs="0">
+                <xs:group ref="containerAttributes"/>
+            </xs:choice>
+            <xs:attribute type="xs:string" name="name"/>
+            <xs:attribute type="xs:string" name="description"/>
+            <xs:attribute type="xs:string" name="logDir"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
