@@ -71,7 +71,6 @@ public final class Main {
 
     private Coordinator coordinator;
     private Compiler compiler;
-    private Monitor monitor;
     private Listener delegate = new Listener();
 
     private static final String stcTitle = System.getenv("stcTitle");
@@ -151,10 +150,6 @@ public final class Main {
             coordinator.setHaltOnError(haltOnError);
             coordinator.addListener(delegate);
 
-            // Prepare the GUI monitor
-            monitor = new Monitor(coordinator, compiler);
-            startMonitorServer(monitor);
-
             // Execute process flow
             processCommand();
 
@@ -163,22 +158,7 @@ public final class Main {
         }
     }
 
-    // Initiates a web-server for the monitor GUI.
-    private static void startMonitorServer(Monitor monitor) {
-        org.eclipse.jetty.util.log.Log.setLog(new NullLogger());
-        Server server = new Server(9999);
-        ServletHandler handler = new ServletHandler();
-        server.setHandler(handler);
-        MonitorWebSocketServlet.setMonitor(monitor);
-        handler.addServletWithMapping(MonitorWebSocketServlet.class, "/*");
-        try {
-            server.start();
-        } catch (Exception e) {
-            print("GUI already active; running without...");
-        }
-    }
-
-    // Processes the appropriate command
+     // Processes the appropriate command
     private void processCommand() {
         switch (command) {
             case RUN:
@@ -443,6 +423,10 @@ public final class Main {
 
         @Override
         public void debug(String msg, Throwable thrown) {
+        }
+
+        @Override
+        public void debug(String msg, long huh) {
         }
 
         @Override
