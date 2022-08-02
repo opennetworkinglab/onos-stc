@@ -15,6 +15,7 @@
  */
 package org.onlab.stc;
 
+import org.eclipse.jetty.util.QuotedStringTokenizer;
 import org.onlab.stc.Coordinator.Status;
 
 import java.io.BufferedReader;
@@ -23,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.String.format;
 import static org.onlab.stc.Coordinator.Status.FAILED;
@@ -97,7 +100,13 @@ class StepProcessor implements Runnable {
      */
     private int execute() {
         try (PrintWriter pw = new PrintWriter(logFile())) {
-            process = Runtime.getRuntime().exec(command());
+            // Delimit using space or tabs, but preserve strings between quotes as one token.
+            QuotedStringTokenizer st = new QuotedStringTokenizer(command, " \t");
+            List<String> cmdList = new ArrayList<>();
+            while (st.hasMoreTokens()) {
+                cmdList.add(st.nextToken());
+            }
+            process = Runtime.getRuntime().exec(cmdList.toArray(new String[]{}), null, null);
             processOutput(pw);
 
             // Wait for the process to complete and get its exit code.

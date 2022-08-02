@@ -34,7 +34,6 @@ public class StepProcessorTest {
     public static TemporaryFolder testFolder = new TemporaryFolder();
 
     private static File dir;
-    private final Listener delegate = new Listener();
 
     @BeforeClass
     public static void setUpClass() {
@@ -45,6 +44,7 @@ public class StepProcessorTest {
 
     @Test
     public void basics() {
+        Listener delegate = new Listener();
         Step step = new Step("foo", "ls " + dir.getAbsolutePath(), null, null, null, 0);
         StepProcessor processor = new StepProcessor(step, dir, delegate, step.command());
         processor.run();
@@ -54,10 +54,49 @@ public class StepProcessorTest {
         assertTrue("should have output", delegate.output);
     }
 
+    @Test
+    public void doubleQuotes() {
+        Listener delegate = new Listener();
+        // Note the double space in "hello  world", we want that to be preserved.
+        Step step = new Step("foo", "echo \"hello  world\"", null, null, null, 0);
+        StepProcessor processor = new StepProcessor(step, dir, delegate, step.command());
+        processor.run();
+        assertEquals("incorrect output", "hello  world", delegate.outputString);
+    }
+
+    @Test
+    public void singleQuotes() {
+        Listener delegate = new Listener();
+        Step step = new Step("foo", "echo 'hello  world'", null, null, null, 0);
+        StepProcessor processor = new StepProcessor(step, dir, delegate, step.command());
+        processor.run();
+        assertEquals("incorrect output", "hello  world", delegate.outputString);
+    }
+
+    @Test
+    public void escapedDoubleQuotes() {
+        Listener delegate = new Listener();
+        Step step = new Step("foo", "echo \"\\\"hello  world\\\"\"", null, null, null, 0);
+        StepProcessor processor = new StepProcessor(step, dir, delegate, step.command());
+        processor.run();
+        assertEquals("incorrect output", "\"hello  world\"", delegate.outputString);
+    }
+
+    @Test
+    public void noQuotes() {
+        Listener delegate = new Listener();
+        Step step = new Step("foo", "echo hello  world", null, null, null, 0);
+        StepProcessor processor = new StepProcessor(step, dir, delegate, step.command());
+        processor.run();
+        // Double space becomes one.
+        assertEquals("incorrect output", "hello world", delegate.outputString);
+    }
+
     private class Listener implements StepProcessListener {
 
         private Coordinator.Status status;
         private boolean started, stopped, output;
+        private String outputString;
 
         @Override
         public void onStart(Step step, String command) {
@@ -72,6 +111,7 @@ public class StepProcessorTest {
 
         @Override
         public void onOutput(Step step, String line) {
+            outputString = line;
             output = true;
         }
     }
